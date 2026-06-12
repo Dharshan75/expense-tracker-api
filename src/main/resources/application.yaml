@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/expense_tracker
+    username: postgres
+    password: deepu7575F   # 🔴 change this
+
+  jpa:
+    hibernate:
+      ddl-auto: update   # auto create/update tables
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+
+server:
+  port: 8080
