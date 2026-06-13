@@ -27,6 +27,8 @@ public class Expense {
 
     private LocalDate date;
 
+    private String suggestedCategory;
+
     // MANUAL, SMS, IMPORT, AI
     @Enumerated(EnumType.STRING)
     private ExpenseSource source;

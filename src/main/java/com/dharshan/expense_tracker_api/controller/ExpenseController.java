@@ -14,6 +14,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import com.dharshan.expense_tracker_api.dto.ExpenseCompleteRequest;
+
 @RestController
 @RequestMapping("/api/expenses")
 @RequiredArgsConstructor
@@ -70,7 +72,7 @@ public class ExpenseController {
     }
 
     // ===============================
-    // GET UNCATEGORIZED EXPENSES
+    // GET PENDING REVIEW EXPENSES
     // ===============================
     @GetMapping("/uncategorized")
     public List<ExpenseResponse> getUncategorizedExpenses() {
@@ -170,6 +172,26 @@ public class ExpenseController {
     }
 
     // ===============================
+// COMPLETE EXPENSE
+// ===============================
+    @PutMapping("/{id}/complete")
+    public ExpenseResponse completeExpense(
+            @PathVariable Long id,
+            @RequestBody ExpenseCompleteRequest request) {
+
+        User user = getCurrentUser();
+
+        Expense expense = expenseService.completeExpense(
+                id,
+                request.getTitle(),
+                request.getCategory(),
+                user
+        );
+
+        return mapToResponse(expense);
+    }
+
+    // ===============================
     // DELETE EXPENSE
     // ===============================
     @DeleteMapping("/{id}")
@@ -181,7 +203,10 @@ public class ExpenseController {
 
         return "Expense deleted successfully";
     }
-
+    @GetMapping("/hello")
+    public String hello() {
+        return "Hello";
+    }
     // ===============================
     // ENTITY → DTO
     // ===============================
@@ -192,9 +217,13 @@ public class ExpenseController {
                 .title(expense.getTitle())
                 .amount(expense.getAmount())
                 .category(expense.getCategory())
+                .suggestedCategory(expense.getSuggestedCategory())
                 .description(expense.getDescription())
                 .date(expense.getDate())
                 .status(expense.getStatus())
+                .merchantName(expense.getMerchantName())
+                .source(expense.getSource())
+                .transactionId(expense.getTransactionId())
                 .build();
     }
 }

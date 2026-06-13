@@ -1,9 +1,8 @@
 package com.dharshan.expense_tracker_api.service;
 
 import com.dharshan.expense_tracker_api.dto.ExpenseRequest;
-import com.dharshan.expense_tracker_api.model.Expense;
-import com.dharshan.expense_tracker_api.model.ExpenseStatus;
-import com.dharshan.expense_tracker_api.model.User;
+import com.dharshan.expense_tracker_api.dto.SmsParseResponse;
+import com.dharshan.expense_tracker_api.model.*;
 import com.dharshan.expense_tracker_api.repository.ExpenseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,14 +12,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.dharshan.expense_tracker_api.dto.SmsParseResponse;
-import com.dharshan.expense_tracker_api.model.ExpenseSource;
-
 @Service
 @RequiredArgsConstructor
 public class ExpenseService {
 
     private final ExpenseRepository expenseRepository;
+    private final CategoryPredictionService categoryPredictionService;
 
     // ===============================
     // ADD EXPENSE
@@ -40,12 +37,16 @@ public class ExpenseService {
                 .amount(request.getAmount())
                 .category(request.getCategory())
                 .description(request.getDescription())
-                .date(request.getDate())
+                .date(
+                        request.getDate() != null
+                                ? request.getDate()
+                                : LocalDate.now()
+                )
                 .merchantName(request.getMerchantName())
                 .source(request.getSource())
                 .transactionId(request.getTransactionId())
                 .user(user)
-                .status(ExpenseStatus.CATEGORIZED)
+                .status(ExpenseStatus.COMPLETED)
                 .build();
 
         return expenseRepository.save(expense);
@@ -71,7 +72,7 @@ public class ExpenseService {
     public List<Expense> getUncategorizedExpenses(User user) {
         return expenseRepository.findByUserAndStatus(
                 user,
-                ExpenseStatus.UNCATEGORIZED
+                ExpenseStatus.PENDING_REVIEW
         );
     }
 
@@ -87,12 +88,14 @@ public class ExpenseService {
                 .orElseThrow(() ->
                         new RuntimeException("Expense not found"));
 
+        System.out.println("Expense User ID = " + expense.getUser().getId());
+        System.out.println("Current User ID = " + user.getId());
+
         if (!expense.getUser().getId().equals(user.getId())) {
             throw new RuntimeException("Unauthorized");
         }
-
         expense.setCategory(category);
-        expense.setStatus(ExpenseStatus.CATEGORIZED);
+        expense.setStatus(ExpenseStatus.COMPLETED);
 
         return expenseRepository.save(expense);
     }
@@ -190,8 +193,8 @@ public class ExpenseService {
     }
 
     // ===============================
-// CREATE EXPENSE FROM SMS
-// ===============================
+    // CREATE EXPENSE FROM SMS
+    // ===============================
     public Expense createSmsExpense(
             SmsParseResponse smsResponse,
             User user) {
@@ -215,21 +218,46 @@ public class ExpenseService {
         }
 
         Expense expense = Expense.builder()
-                .title(
-                        smsResponse.getMerchantName() != null
-                                ? smsResponse.getMerchantName()
-                                : "SMS Expense"
-                )
+                .title(null)
                 .amount(smsResponse.getAmount())
-                .category("Uncategorized")
+                .category(null)
+                .suggestedCategory(
+                        categoryPredictionService.predictCategory(
+                                smsResponse.getMerchantName()
+                        )
+                )
                 .description("Automatically created from SMS")
                 .date(LocalDate.now())
                 .merchantName(smsResponse.getMerchantName())
                 .transactionId(smsResponse.getTransactionId())
                 .source(ExpenseSource.SMS)
-                .status(ExpenseStatus.UNCATEGORIZED)
+                .status(ExpenseStatus.PENDING_REVIEW)
                 .user(user)
                 .build();
+
+        return expenseRepository.save(expense);
+    }
+
+    // ===============================
+// COMPLETE EXPENSE
+// ===============================
+    public Expense completeExpense(
+            Long expenseId,
+            String title,
+            String category,
+            User user) {
+
+        Expense expense = expenseRepository.findById(expenseId)
+                .orElseThrow(() ->
+                        new RuntimeException("Expense not found"));
+
+        if (!expense.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        expense.setTitle(title);
+        expense.setCategory(category);
+        expense.setStatus(ExpenseStatus.COMPLETED);
 
         return expenseRepository.save(expense);
     }
