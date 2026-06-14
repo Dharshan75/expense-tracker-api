@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -29,7 +30,7 @@ public class UserController {
     // 🔹 REGISTER
     // ===============================
     @PostMapping("/register")
-    public UserResponse register(@RequestBody RegisterRequest request) {
+    public UserResponse register(@Valid @RequestBody RegisterRequest request){
 
         User user = User.builder()
                 .username(request.getUsername())
@@ -50,7 +51,7 @@ public class UserController {
     // 🔹 LOGIN (Returns JWT)
     // ===============================
     @PostMapping("/login")
-    public Map<String, String> login(@RequestBody LoginRequest request) {
+    public Map<String, String> login(@Valid @RequestBody LoginRequest request) {
 
         User user = userService.loginUser(
                 request.getEmail().toLowerCase(), // ✅ FIX

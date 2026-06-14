@@ -9,7 +9,7 @@ import com.dharshan.expense_tracker_api.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-
+import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +40,8 @@ public class ExpenseController {
     // ADD EXPENSE
     // ===============================
     @PostMapping
-    public ExpenseResponse addExpense(@RequestBody ExpenseRequest request) {
+    public ExpenseResponse addExpense(
+            @Valid @RequestBody ExpenseRequest request) {
 
         User user = getCurrentUser();
 

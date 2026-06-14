@@ -13,6 +13,11 @@ import com.dharshan.expense_tracker_api.dto.TopMerchantResponse;
 import com.dharshan.expense_tracker_api.dto.TopPurposeResponse;
 import com.dharshan.expense_tracker_api.dto.SpendingPatternResponse;
 import com.dharshan.expense_tracker_api.dto.TopCategoryResponse;
+import com.dharshan.expense_tracker_api.dto.AiInsightResponse;
+import com.dharshan.expense_tracker_api.dto.CategoryDetailsResponse;
+import com.dharshan.expense_tracker_api.dto.MerchantDetailsResponse;
+import com.dharshan.expense_tracker_api.dto.PurposeDetailsResponse;
+import com.dharshan.expense_tracker_api.dto.MonthComparisonResponse;
 @RestController
 @RequestMapping("/api/analytics")
 @RequiredArgsConstructor
@@ -59,6 +64,53 @@ public class AnalyticsController {
         User user = getCurrentUser();
 
         return analyticsService.getTopCategory(user);
+    }
+    @GetMapping("/ai-insights")
+    public AiInsightResponse getAiInsights() {
+
+        User user = getCurrentUser();
+
+        return analyticsService.getAiInsights(user);
+    }
+    @GetMapping("/category/{category}")
+    public CategoryDetailsResponse getCategoryDetails(
+            @PathVariable String category) {
+
+        User user = getCurrentUser();
+
+        return analyticsService.getCategoryDetails(
+                category,
+                user
+        );
+    }
+    @GetMapping("/merchant/{merchant}")
+    public MerchantDetailsResponse getMerchantDetails(
+            @PathVariable String merchant) {
+
+        User user = getCurrentUser();
+
+        return analyticsService.getMerchantDetails(
+                merchant,
+                user
+        );
+    }
+    @GetMapping("/purpose/{purpose}")
+    public PurposeDetailsResponse getPurposeDetails(
+            @PathVariable String purpose) {
+
+        User user = getCurrentUser();
+
+        return analyticsService.getPurposeDetails(
+                purpose,
+                user
+        );
+    }
+    @GetMapping("/month-comparison")
+    public MonthComparisonResponse getMonthComparison() {
+
+        User user = getCurrentUser();
+
+        return analyticsService.getMonthComparison(user);
     }
     private final AnalyticsService analyticsService;
     private final UserService userService;

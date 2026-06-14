@@ -12,6 +12,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.dharshan.expense_tracker_api.exception.DuplicateTransactionException;
+import com.dharshan.expense_tracker_api.exception.ExpenseNotFoundException;
+import com.dharshan.expense_tracker_api.exception.UnauthorizedException;
+
 @Service
 @RequiredArgsConstructor
 public class ExpenseService {
@@ -29,7 +33,7 @@ public class ExpenseService {
                 expenseRepository.findByTransactionId(
                         request.getTransactionId()).isPresent()) {
 
-            throw new RuntimeException("Duplicate transaction");
+            throw new DuplicateTransactionException("Duplicate transaction");
         }
 
         Expense expense = Expense.builder()
@@ -43,7 +47,11 @@ public class ExpenseService {
                                 : LocalDate.now()
                 )
                 .merchantName(request.getMerchantName())
-                .source(request.getSource())
+                .source(
+                        request.getSource() != null
+                                ? request.getSource()
+                                : ExpenseSource.CASH
+                )
                 .transactionId(request.getTransactionId())
                 .user(user)
                 .status(ExpenseStatus.COMPLETED)
@@ -86,13 +94,13 @@ public class ExpenseService {
 
         Expense expense = expenseRepository.findById(expenseId)
                 .orElseThrow(() ->
-                        new RuntimeException("Expense not found"));
+                        new ExpenseNotFoundException("Expense not found"));
 
         System.out.println("Expense User ID = " + expense.getUser().getId());
         System.out.println("Current User ID = " + user.getId());
 
         if (!expense.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Unauthorized");
+            throw new UnauthorizedException("Unauthorized");
         }
         expense.setCategory(category);
         expense.setStatus(ExpenseStatus.COMPLETED);
@@ -214,7 +222,7 @@ public class ExpenseService {
                 expenseRepository.findByTransactionId(
                         smsResponse.getTransactionId()).isPresent()) {
 
-            throw new RuntimeException("Duplicate transaction");
+            throw new DuplicateTransactionException("Duplicate transaction");
         }
 
         Expense expense = Expense.builder()
@@ -230,7 +238,7 @@ public class ExpenseService {
                 .date(LocalDate.now())
                 .merchantName(smsResponse.getMerchantName())
                 .transactionId(smsResponse.getTransactionId())
-                .source(ExpenseSource.SMS)
+                .source(ExpenseSource.UPI)
                 .status(ExpenseStatus.PENDING_REVIEW)
                 .user(user)
                 .build();
@@ -249,10 +257,10 @@ public class ExpenseService {
 
         Expense expense = expenseRepository.findById(expenseId)
                 .orElseThrow(() ->
-                        new RuntimeException("Expense not found"));
+                        new ExpenseNotFoundException("Expense not found"));
 
         if (!expense.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Unauthorized");
+            throw new UnauthorizedException("Unauthorized");
         }
 
         expense.setTitle(title);
@@ -269,10 +277,10 @@ public class ExpenseService {
 
         Expense expense = expenseRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Expense not found"));
+                        new ExpenseNotFoundException("Expense not found"));
 
         if (!expense.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Unauthorized");
+            throw new UnauthorizedException("Unauthorized");
         }
 
         expenseRepository.delete(expense);
