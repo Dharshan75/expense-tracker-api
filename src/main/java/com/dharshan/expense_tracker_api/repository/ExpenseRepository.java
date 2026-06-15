@@ -3,41 +3,63 @@ package com.dharshan.expense_tracker_api.repository;
 import com.dharshan.expense_tracker_api.model.Expense;
 import com.dharshan.expense_tracker_api.model.ExpenseStatus;
 import com.dharshan.expense_tracker_api.model.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-public interface ExpenseRepository extends JpaRepository<Expense, Long> {
+public interface ExpenseRepository
+        extends JpaRepository<Expense, Long> {
 
-    // All expenses of a user
+    // ===============================
+    // BASIC
+    // ===============================
     List<Expense> findByUser(User user);
 
-    // Filter by category
-    List<Expense> findByUserAndCategory(User user, String category);
+    Page<Expense> findByUser(User user, Pageable pageable);
 
-    // Filter by status
-    List<Expense> findByUserAndStatus(User user, ExpenseStatus status);
+    List<Expense> findByUserAndCategory(
+            User user,
+            String category);
 
-    // Daily expenses
-    List<Expense> findByUserAndDate(User user, LocalDate date);
+    List<Expense> findByUserAndStatus(
+            User user,
+            ExpenseStatus status);
 
-    // Date range
+    // ===============================
+    // DATE FILTERS
+    // ===============================
+    List<Expense> findByUserAndDate(
+            User user,
+            LocalDate date);
+
     List<Expense> findByUserAndDateBetween(
             User user,
             LocalDate startDate,
-            LocalDate endDate
-    );
+            LocalDate endDate);
 
-    // Category + Date range
     List<Expense> findByUserAndCategoryAndDateBetween(
             User user,
             String category,
             LocalDate startDate,
-            LocalDate endDate
-    );
+            LocalDate endDate);
 
-    // Duplicate transaction protection
-    Optional<Expense> findByTransactionId(String transactionId);
+    // ===============================
+    // SMS DUPLICATE CHECK
+    // ===============================
+    Optional<Expense> findByTransactionId(
+            String transactionId);
+
+    // ===============================
+    // SEARCH
+    // ===============================
+    List<Expense>
+    findByUserAndTitleContainingIgnoreCaseOrUserAndCategoryContainingIgnoreCase(
+            User user,
+            String titleKeyword,
+            User sameUser,
+            String categoryKeyword);
 }

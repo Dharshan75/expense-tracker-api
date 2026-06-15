@@ -16,6 +16,9 @@ import com.dharshan.expense_tracker_api.exception.DuplicateTransactionException;
 import com.dharshan.expense_tracker_api.exception.ExpenseNotFoundException;
 import com.dharshan.expense_tracker_api.exception.UnauthorizedException;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
 @Service
 @RequiredArgsConstructor
 public class ExpenseService {
@@ -60,6 +63,21 @@ public class ExpenseService {
         return expenseRepository.save(expense);
     }
 
+    // ===============================
+// PAGINATED EXPENSES
+// ===============================
+    public List<Expense> getUserExpenses(
+            User user,
+            int page,
+            int size) {
+
+        Pageable pageable =
+                PageRequest.of(page, size);
+
+        return expenseRepository
+                .findByUser(user, pageable)
+                .getContent();
+    }
     // ===============================
     // GET ALL EXPENSES
     // ===============================
@@ -268,6 +286,45 @@ public class ExpenseService {
         expense.setStatus(ExpenseStatus.COMPLETED);
 
         return expenseRepository.save(expense);
+    }
+
+    // ===============================
+// UPDATE EXPENSE
+// ===============================
+    public Expense updateExpense(
+            Long id,
+            ExpenseRequest request,
+            User user) {
+
+        Expense expense = expenseRepository.findById(id)
+                .orElseThrow(() ->
+                        new ExpenseNotFoundException("Expense not found"));
+
+        if (!expense.getUser().getId().equals(user.getId())) {
+            throw new UnauthorizedException("Unauthorized");
+        }
+
+        expense.setTitle(request.getTitle());
+        expense.setAmount(request.getAmount());
+        expense.setCategory(request.getCategory());
+
+        return expenseRepository.save(expense);
+    }
+
+    // ===============================
+// SEARCH EXPENSES
+// ===============================
+    public List<Expense> searchExpenses(
+            User user,
+            String keyword) {
+
+        return expenseRepository
+                .findByUserAndTitleContainingIgnoreCaseOrUserAndCategoryContainingIgnoreCase(
+                        user,
+                        keyword,
+                        user,
+                        keyword
+                );
     }
 
     // ===============================

@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.dharshan.expense_tracker_api.dto.ExpenseCompleteRequest;
-
+import org.springframework.web.bind.annotation.RequestParam;
 @RestController
 @RequestMapping("/api/expenses")
 @RequiredArgsConstructor
@@ -53,18 +53,32 @@ public class ExpenseController {
     // ===============================
     // GET ALL EXPENSES
     // ===============================
+    // ===============================
+// GET ALL EXPENSES
+// ===============================
     @GetMapping
     public List<ExpenseResponse> getExpenses(
-            @RequestParam(required = false) String category) {
+
+            @RequestParam(required = false) String category,
+
+            @RequestParam(defaultValue = "0") int page,
+
+            @RequestParam(defaultValue = "20") int size) {
 
         User user = getCurrentUser();
 
         List<Expense> expenses;
 
         if (category != null) {
-            expenses = expenseService.getExpensesByCategory(user, category);
+
+            expenses = expenseService
+                    .getExpensesByCategory(user, category);
+
         } else {
-            expenses = expenseService.getUserExpenses(user);
+
+            expenses = expenseService
+                    .getUserExpenses(user, page, size);
+
         }
 
         return expenses.stream()
@@ -171,7 +185,20 @@ public class ExpenseController {
 
         return expenseService.getCategorySummary(user);
     }
+    // ===============================
+// SEARCH EXPENSES
+// ===============================
+    @GetMapping("/search")
+    public List<ExpenseResponse> searchExpenses(
+            @RequestParam String keyword) {
 
+        User user = getCurrentUser();
+
+        return expenseService.searchExpenses(user, keyword)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
     // ===============================
 // COMPLETE EXPENSE
 // ===============================
@@ -188,6 +215,22 @@ public class ExpenseController {
                 request.getCategory(),
                 user
         );
+
+        return mapToResponse(expense);
+    }
+
+    // ===============================
+// UPDATE EXPENSE
+// ===============================
+    @PutMapping("/{id}")
+    public ExpenseResponse updateExpense(
+            @PathVariable Long id,
+            @RequestBody ExpenseRequest request) {
+
+        User user = getCurrentUser();
+
+        Expense expense =
+                expenseService.updateExpense(id, request, user);
 
         return mapToResponse(expense);
     }
