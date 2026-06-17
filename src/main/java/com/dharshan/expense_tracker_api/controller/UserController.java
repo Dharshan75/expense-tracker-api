@@ -11,7 +11,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-
+import org.springframework.http.ResponseEntity;
+import java.security.Principal;
+import com.dharshan.expense_tracker_api.dto.ChangePasswordRequest;
 import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/users")
@@ -80,5 +82,23 @@ public class UserController {
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .build();
+    }
+    @PutMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+
+            @RequestBody ChangePasswordRequest request,
+
+            Principal principal) {
+
+        userService.changePassword(
+
+                principal.getName(),
+
+                request.getCurrentPassword(),
+
+                request.getNewPassword());
+
+        return ResponseEntity.ok(
+                "Password changed successfully");
     }
 }

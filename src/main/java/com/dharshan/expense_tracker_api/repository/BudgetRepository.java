@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface BudgetRepository extends JpaRepository<Budget, UUID> {
+public interface BudgetRepository
+        extends JpaRepository<Budget, UUID> {
 
     List<Budget> findByUser(User user);
 
@@ -17,5 +18,10 @@ public interface BudgetRepository extends JpaRepository<Budget, UUID> {
             String category,
             Integer month,
             Integer year
+    );
+
+    Optional<Budget> findByIdAndUser(
+            UUID id,
+            User user
     );
 }

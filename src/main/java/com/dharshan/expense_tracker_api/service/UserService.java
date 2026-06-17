@@ -73,4 +73,27 @@ public class UserService {
         return userRepository.findByEmail(email.toLowerCase())
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
+    public void changePassword(
+            String email,
+            String currentPassword,
+            String newPassword) {
+
+        User user = userRepository
+                .findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
+
+        if (!passwordEncoder.matches(
+                currentPassword,
+                user.getPassword())) {
+
+            throw new RuntimeException(
+                    "Current password is incorrect");
+        }
+
+        user.setPassword(
+                passwordEncoder.encode(newPassword));
+
+        userRepository.save(user);
+    }
 }

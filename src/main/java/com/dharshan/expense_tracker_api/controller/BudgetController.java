@@ -13,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/budgets")
@@ -94,5 +95,46 @@ public class BudgetController {
         User user = getCurrentUser();
 
         return budgetService.getBudgetAlerts(user);
+    }
+    // ===============================
+// UPDATE BUDGET
+// ===============================
+    @PutMapping("/{id}")
+    public BudgetResponse updateBudget(
+
+            @PathVariable UUID id,
+
+            @RequestBody BudgetRequest request) {
+
+        User user = getCurrentUser();
+
+        Budget budget =
+                budgetService.updateBudget(
+                        id,
+                        request,
+                        user
+                );
+
+        return BudgetResponse.builder()
+                .id(budget.getId())
+                .category(budget.getCategory())
+                .amount(budget.getAmount())
+                .month(budget.getMonth())
+                .year(budget.getYear())
+                .build();
+    }
+
+    // ===============================
+// DELETE BUDGET
+// ===============================
+    @DeleteMapping("/{id}")
+    public String deleteBudget(
+            @PathVariable UUID id) {
+
+        User user = getCurrentUser();
+
+        budgetService.deleteBudget(id, user);
+
+        return "Budget deleted successfully";
     }
 }

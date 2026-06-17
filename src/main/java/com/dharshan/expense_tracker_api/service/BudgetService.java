@@ -14,7 +14,8 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.Optional;
+import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class BudgetService {
@@ -25,17 +26,41 @@ public class BudgetService {
     // ===============================
     // CREATE BUDGET
     // ===============================
+    // ===============================
+// CREATE BUDGET
+// ===============================
     public Budget createBudget(BudgetRequest request, User user) {
 
+        Optional<Budget> existingBudget =
+                budgetRepository.findByUserAndCategoryAndMonthAndYear(
+
+                        user,
+                        request.getCategory(),
+                        request.getMonth(),
+                        request.getYear()
+
+                );
+
+        if (existingBudget.isPresent()) {
+
+            throw new RuntimeException(
+                    "Budget already exists for this category and month"
+            );
+
+        }
+
         Budget budget = Budget.builder()
+
                 .category(request.getCategory())
                 .amount(request.getAmount())
                 .month(request.getMonth())
                 .year(request.getYear())
                 .user(user)
+
                 .build();
 
         return budgetRepository.save(budget);
+
     }
 
     // ===============================
@@ -86,6 +111,7 @@ public class BudgetService {
 
             responses.add(
                     BudgetUsageResponse.builder()
+                            .id(budget.getId())
                             .category(budget.getCategory())
                             .budgetAmount(budget.getAmount())
                             .spentAmount(spent)
@@ -135,5 +161,37 @@ public class BudgetService {
         }
 
         return alerts;
+    }
+    // ===============================
+// UPDATE BUDGET
+// ===============================
+    public Budget updateBudget(
+            UUID id,
+            BudgetRequest request,
+            User user) {
+
+        Budget budget = budgetRepository
+                .findByIdAndUser(id, user)
+                .orElseThrow(() ->
+                        new RuntimeException("Budget not found"));
+
+        budget.setAmount(request.getAmount());
+
+        return budgetRepository.save(budget);
+    }
+
+    // ===============================
+// DELETE BUDGET
+// ===============================
+    public void deleteBudget(
+            UUID id,
+            User user) {
+
+        Budget budget = budgetRepository
+                .findByIdAndUser(id, user)
+                .orElseThrow(() ->
+                        new RuntimeException("Budget not found"));
+
+        budgetRepository.delete(budget);
     }
 }
